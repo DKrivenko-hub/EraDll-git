@@ -25,7 +25,9 @@ namespace EraDll
         string GetGunPressure ( byte GunNumb );
 
         bool IsPour ( byte GunNumb );
-        
+
+        public void SetCacheGunStatus ( byte GunNumb );
+
         bool PourGasolineLit ( byte GunNumb, int liters, int PriceForLit );
         bool PourGasolinePrice ( byte GunNumb, int price, int PriceForLit );
         bool PourNcachLit ( byte GunNumb, int liters, int PriceForLit );
@@ -140,24 +142,28 @@ namespace EraDll
             }
             return false;
         }
-        
+
+
         public double GetCacheLit (byte GunNumb)
         {
             return port.GetCacheLit(GunNumb);
         }
 
-        async private void SetCacheGunStatus ( byte GunNumb )
+        async public void SetCacheGunStatus ( byte GunNumb )
         {        
             await Task.Run(()=>GetGunStatus(GunNumb));
             Errors GunStatus = port.GetStatusByte;
             if (GunStatus.ErrorCode == "80" || GunStatus.ErrorCode == "81" || GunStatus.ErrorCode == "82")
-            {
+            {                                                                                             
                 double lit = await Task.Run(() => LastLiters(GunNumb));
+                Console.WriteLine("---------------------WorkAsyncMeth--------------------");
+                Console.WriteLine(lit);
+                Console.WriteLine("---------------------WorkAsyncMeth--------------------");
                 port.SetCacheLit(GunNumb, lit);
-                await Task.Run(()=> SetCacheGunStatus(GunNumb));  
+                await Task.Run(() => SetCacheGunStatus(GunNumb));
             }
-          
         }
+
         public bool IsPour ( byte GunNumb )
         {
             GetGunStatus(GunNumb);
