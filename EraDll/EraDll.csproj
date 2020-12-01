@@ -62,10 +62,11 @@
     <Compile Include="Adapter.cs" />
     <Compile Include="Converter.cs" />
     <Compile Include="CRC16.cs" />
-    <Compile Include="Data.cs" />
     <Compile Include="Errors.cs" />
     <Compile Include="Port.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Request.cs" />
+    <Compile Include="Response.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
