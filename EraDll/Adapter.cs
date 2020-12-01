@@ -16,7 +16,7 @@ namespace EraDll
         string PortName { get; set; }
 
 
-        bool Connect ();
+        bool Connect ();     
         bool Disconnect ();
        
         bool CheckConnection ();
