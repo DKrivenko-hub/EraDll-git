@@ -9,7 +9,7 @@ namespace EraDll
 
         public List<byte> GetResponse { get; set; } = new List<byte>();
 
-        public Dictionary<byte, int> CacheLit { get; set; } = new Dictionary<byte, int>();
+        public Dictionary<byte, double> CacheLit { get; set; } = new Dictionary<byte, double>();
 
         private readonly List<Errors> ErrorList = new List<Errors>()
             {
