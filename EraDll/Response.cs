@@ -1,53 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace EraDll
 {
-
-    enum ByteCounts : byte
+    class Response
     {
-        status = 07,
-        curLit = 07,
-        changeShift = 07,
-        litersShift = 07,
-        priceShift = 07,
-        NcashShift = 07,
-        totLit = 07,
-        pressure = 07,
-        pourLit = 14,
-        pourPr = 14,
-        NcashLit = 14,
-        start = 07,
-        stop = 07,
-        pause = 07
-    }
 
-    enum Commands : byte
-    {
-        status = 01,
-        curLit = 04,
-        pourLit = 05,
-        NcashLit = 06,
-        pourPr = 09,
-        changeShift = 10,
-        pause = 11,
-        stop = 12,
-        litersShift = 13,
-        NcashShift = 14,
-        priceShift = 15,
-        start = 17,
-        totLit = 21,
-        pressure = 25,
-    }
-
-    internal class Data
-    {
         private string parseResponse = "";
-        public string Request { get; private set; } = "2D ";
 
-        public List<byte> Response { get; set; } = new List<byte>();
+        public List<byte> GetResponse { get; set; } = new List<byte>();
 
-        private string IndexHex;
+        public Dictionary<byte, int> CacheLit { get; set; } = new Dictionary<byte, int>();
 
         private readonly List<Errors> ErrorList = new List<Errors>()
             {
@@ -84,54 +46,15 @@ namespace EraDll
 
         public Errors CurrError { get; private set; } = null;
 
-
+        
         public void ClearResponse ()
         {
             parseResponse = "";
-            Response.Clear();
-        }
-
-        public string CreateRequest ( byte PistolNumb, byte indexByte, ByteCounts bytes, Commands command )
-        {
-            IndexHex = Converter.ByteToHex(indexByte);
-            string[] textArray1 = new string[] { 
-                Request, 
-                Converter.ByteToHex(PistolNumb),
-                " ",
-                IndexHex,
-                " ",
-                Converter.ByteToHex((byte)bytes),
-                " ",
-                Converter.ByteToHex((byte)command) };
-            Request = string.Concat(textArray1);
-            Request = Request + CRC16.GetCrc(Converter.HexToBytes(Request));
-            return Request;
-        }
-
-        public string CreateRequest ( byte PistolNumb, byte indexByte, int PriceForLit, int param, ByteCounts bytes, Commands command )
-        {
-            IndexHex = Converter.ByteToHex(indexByte);
-            string[] textArray1 = new string[12];
-            textArray1[0] = Request;
-            textArray1[1] = Converter.ByteToHex(PistolNumb);
-            textArray1[2] = " ";
-            textArray1[3] = this.IndexHex;
-            textArray1[4] = " ";
-            textArray1[5] = Converter.ByteToHex((byte)bytes);
-            textArray1[6] = " ";
-            textArray1[7] = Converter.ByteToHex((byte)command);
-            textArray1[8] = " 00 00 ";
-            textArray1[9] = Converter.IntToHex(param);
-            textArray1[10] = " ";
-            textArray1[11] = Converter.PriceForLitrToHex(PriceForLit);
-            Request = string.Concat(textArray1);
-            Request = Request + CRC16.GetCrc(Converter.HexToBytes(Request));
-            return Request;
+            GetResponse.Clear();
         }
 
         public double ParseLiters ( int startByte, int count )
         {
-
             if (CurrError == null)
             {
                 return -1;
@@ -141,12 +64,12 @@ namespace EraDll
             int i = 0;
             do
             {
-                if (Response[startByte + count - i - 1] == 0)
+                if (GetResponse[startByte + count - i - 1] == 0)
                 {
                     i++;
                     continue;
                 }
-                litBytes += Converter.ByteToHex(Response[startByte + count - i - 1]);
+                litBytes += Converter.ByteToHex(GetResponse[startByte + count - i - 1]);
                 i++;
             } while (i < count);
 
@@ -164,28 +87,29 @@ namespace EraDll
             string hex = "";
             for (int i = 0; i < 2; i++)
             {
-                hex += Converter.ByteToHex(Response[14 - i]);
+                hex += Converter.ByteToHex(GetResponse[14 - i]);
             }
             return Converter.HexToInt(hex);
         }
         public string ParseResponse ()
         {
-            if (this.Response.Count > 0)
+            if (this.GetResponse.Count > 0)
             {
-                CurrError = this.ErrorList.Find(er => er.ErrorCode.Contains(Converter.ByteToHex(this.Response[4]))) ?? this.ErrorList[20];
+                CurrError = this.ErrorList.Find(er => er.ErrorCode.Contains(Converter.ByteToHex(this.GetResponse[4]))) ?? this.ErrorList[20];
 
-                this.parseResponse = "Номер пистолета: " + this.Response[1].ToString();
+                this.parseResponse = "Номер пистолета: " + this.GetResponse[1].ToString();
                 string[] textArray1 = new string[] { this.parseResponse, " Ответ: ", CurrError.ErrorDescription, "; Сообщение: ", CurrError.ErrorMessage };
                 this.parseResponse = string.Concat(textArray1);
-                this.parseResponse = this.parseResponse + " Полный код ответа: " + Converter.BytesToHex(this.Response.ToArray());
+                this.parseResponse = this.parseResponse + " Полный код ответа: " + Converter.BytesToHex(this.GetResponse.ToArray());
             }
             return this.parseResponse;
         }
 
         public string RespToString ()
         {
-            return Converter.BytesToHex(this.Response.ToArray());
+            return Converter.BytesToHex(this.GetResponse.ToArray());
         }
+
+        
     }
 }
-

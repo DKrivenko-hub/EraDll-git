@@ -1,20 +1,21 @@
 ﻿using System;
 using System.IO.Ports;
-//using System.Threading;
-
 
 namespace EraDll
 {
     class Port
     {
         private SerialPort _sp = new SerialPort();
-        private readonly Data response = new Data();
+        private readonly Response response = new Response();
 
         public bool CheckConnection => _sp.IsOpen;
         public byte IndexByte { get; private set; } = 0;
         public string GetResponse => response.ParseResponse();
+        public int GetCacheLit ( byte GunNumb ) => response.CacheLit[GunNumb];
+        public int SetCacheLit ( byte GunNumb ) = response.
         public bool GetParseStatus { get; private set; }
 
+        public byte GetByteResp ( int index ) => response.GetResponse[index];
         public Errors GetStatusByte => response.CurrError;
 
         public bool IsStart { get; private set; }
@@ -82,7 +83,7 @@ namespace EraDll
                         }
                         break;
                     }
-                    response.Response.Add((byte)port.ReadByte());
+                    response.GetResponse.Add((byte)port.ReadByte());
                     num2++;
                 }
             }
