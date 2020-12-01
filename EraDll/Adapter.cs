@@ -154,7 +154,7 @@ namespace EraDll
             await Task.Run(()=>GetGunStatus(GunNumb));
             Errors GunStatus = port.GetStatusByte;
             if (GunStatus.ErrorCode == "80" || GunStatus.ErrorCode == "81" || GunStatus.ErrorCode == "82")
-            {
+            {                                                                                             
                 double lit = await Task.Run(() => LastLiters(GunNumb));
                 Console.WriteLine("---------------------WorkAsyncMeth--------------------");
                 Console.WriteLine(lit);
