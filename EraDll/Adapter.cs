@@ -14,28 +14,38 @@ namespace EraDll
         [DispId(1)]
         int SetTimeout { get; set; }
         string PortName { get; set; }
-        int GetCacheLit (byte GunNumb);
 
-        bool Connect ();
+
+        bool Connect ();     
         bool Disconnect ();
+       
+        bool CheckConnection ();
+
         string GetGunStatus ( byte GunNumb );
         string GetGunPressure ( byte GunNumb );
+
         bool IsPour ( byte GunNumb );
-        bool CheckConnection ();
+        
         bool PourGasolineLit ( byte GunNumb, int liters, int PriceForLit );
         bool PourGasolinePrice ( byte GunNumb, int price, int PriceForLit );
         bool PourNcachLit ( byte GunNumb, int liters, int PriceForLit );
+
         double LastLiters ( byte GunNumb );
         double LastAmount ( byte GunNumb );
+
         bool ChangeShift ( byte GunNumb );
         double LitersShift ( byte GunNumb );
         bool PriceShift ( byte GunNumb );
         bool NcashShift ( byte GunNumb );
+
         double TotalLiters ( byte GunNumb );
+
         string LastResponse ();
+
         bool Start ( byte GunNumb );
         bool Pause ( byte GunNumb );
         bool Stop ( byte GunNumb );
+
         bool ReadyToWork (byte GunNumb);
     }
 
@@ -131,7 +141,7 @@ namespace EraDll
             return false;
         }
         
-        public int GetCacheLit (byte GunNumb)
+        public double GetCacheLit (byte GunNumb)
         {
             return port.GetCacheLit(GunNumb);
         }

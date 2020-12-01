@@ -11,8 +11,15 @@ namespace EraDll
         public bool CheckConnection => _sp.IsOpen;
         public byte IndexByte { get; private set; } = 0;
         public string GetResponse => response.ParseResponse();
-        public int GetCacheLit ( byte GunNumb ) => response.CacheLit[GunNumb];
-        public int SetCacheLit ( byte GunNumb ) = response.
+        public double GetCacheLit ( byte GunNumb ) => response.CacheLit[GunNumb];
+        public void SetCacheLit ( byte GunNumb,  double liters )
+        {
+            if (response.CacheLit.ContainsKey(GunNumb))
+            {
+                response.CacheLit.Remove(GunNumb);
+            }
+            response.CacheLit.Add(GunNumb, liters);
+        }
         public bool GetParseStatus { get; private set; }
 
         public byte GetByteResp ( int index ) => response.GetResponse[index];
