@@ -2,6 +2,11 @@
 {
     internal class Errors
     {
+        private static readonly byte[] pourStat = 
+        {
+            132,
+           133,
+        };
         public Errors ( string ErrorCode, string ErrorMessage, string ErrorShDescription, string ErrorDescription, bool IsError = false )
         {
             this.ErrorCode = ErrorCode;
@@ -33,5 +38,10 @@
         public int RespBytes { get; private set; }
 
         public bool IsError { get; private set; }
+        
+        public static byte[] GetPourStatuses ()
+        {
+            return pourStat;
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO.Ports;
 
 namespace EraDll
@@ -13,7 +13,7 @@ namespace EraDll
         public string GetResponse => response.ParseResponse();
         public int GetCacheLit ( byte GunNumb ) => response.CacheLit[GunNumb];
         public int SetCacheLit ( byte GunNumb ) = response.
-        public bool GetParseStatus { get; private set; }         
+        public bool GetParseStatus { get; private set; }
 
         public byte GetByteResp ( int index ) => response.GetResponse[index];
         public Errors GetStatusByte => response.CurrError;
