@@ -2,16 +2,7 @@
 
 namespace EraDll
 {
-    class Response
-    {
-
-        private string parseResponse = "";
-
-        public List<byte> GetResponse { get; set; } = new List<byte>();
-
-        public Dictionary<byte, double> CacheLit { get; set; } = new Dictionary<byte, double>();
-
-        private readonly List<Errors> ErrorList = new List<Errors>()
+    public static readonly List<Errors> ErrorList = new List<Errors>()
             {
                 new Errors("80", "Полностью остановленная ТРК и неактивная клавиатура", "SSR", "Stop Status Response", 9, false) ,
                 new Errors("81", "Полностью остановленная ТРК, неактивная клавиатура и расширенный режим ответа ", "SSE", "Stop Status Extend ", 11, false) ,
@@ -44,9 +35,20 @@ namespace EraDll
                 new Errors("", "Неопознанный ответ", "U", "Unknown", 9, true)
             };
 
+    class Response
+    {
+
+        private string parseResponse = "";
+
+        public List<byte> GetResponse { get; set; } = new List<byte>();
+
+        public double CacheGunLit { get; set; }
+        public byte CacheGunStatus { get; set; }
+
+
         public Errors CurrError { get; private set; } = null;
 
-        
+
         public void ClearResponse ()
         {
             parseResponse = "";
@@ -64,7 +66,7 @@ namespace EraDll
             int i = 0;
             do
             {
-                if (GetResponse[startByte + count - i - 1] == 0)
+                if (GetResponse[startByte + count - i - 1] == 0 & i + 1 < count)
                 {
                     i++;
                     continue;
@@ -110,6 +112,6 @@ namespace EraDll
             return Converter.BytesToHex(this.GetResponse.ToArray());
         }
 
-        
+
     }
 }
