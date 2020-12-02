@@ -14,29 +14,44 @@ namespace EraDll
         [DispId(1)]
         int SetTimeout { get; set; }
         string PortName { get; set; }
-        int GetCacheLit (byte GunNumb);
+
 
         bool Connect ();
         bool Disconnect ();
+
+        bool CheckConnection ();
+
         string GetGunStatus ( byte GunNumb );
         string GetGunPressure ( byte GunNumb );
+
         bool IsPour ( byte GunNumb );
-        bool CheckConnection ();
+
+        //public void SetCacheGunStatus ( byte GunNumb );
+
         bool PourGasolineLit ( byte GunNumb, int liters, int PriceForLit );
         bool PourGasolinePrice ( byte GunNumb, int price, int PriceForLit );
         bool PourNcachLit ( byte GunNumb, int liters, int PriceForLit );
-        double LastLiters ( byte GunNumb );
+
+        //double LastLiters ( byte GunNumb );
         double LastAmount ( byte GunNumb );
+
+        double GetCacheLit ( byte GunNumb );
+        byte GetCacheStatus ( byte GunNumb );
+
         bool ChangeShift ( byte GunNumb );
         double LitersShift ( byte GunNumb );
         bool PriceShift ( byte GunNumb );
         bool NcashShift ( byte GunNumb );
+
         double TotalLiters ( byte GunNumb );
+
         string LastResponse ();
+
         bool Start ( byte GunNumb );
         bool Pause ( byte GunNumb );
         bool Stop ( byte GunNumb );
-        bool ReadyToWork (byte GunNumb);
+
+        bool ReadyToWork ( byte GunNumb );
     }
 
     [Guid("853F959A-81DB-4021-B8E5-DB322F8E829E"), InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
@@ -51,22 +66,6 @@ namespace EraDll
         public string PortName { get; set; } = "COM3";
         public int SetTimeout { get; set; } = 2000;
 
-        public bool ChangeShift ( byte GunNumb )
-        {
-            Request request = new Request();
-            request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.changeShift);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
-            Thread.Sleep(SetTimeout);
-            string getResponse = "";
-            try
-            {
-                getResponse = port.GetResponse;
-            }
-            catch (Exception)
-            {
-            }
-            return (getResponse != "");
-        }
 
         public bool Connect ()
         {
@@ -86,6 +85,24 @@ namespace EraDll
             {
                 port.Disconnect();
             }
+        }
+
+
+        public bool ChangeShift ( byte GunNumb )
+        {
+            Request request = new Request();
+            request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.changeShift);
+            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            Thread.Sleep(SetTimeout);
+            string getResponse = "";
+            try
+            {
+                getResponse = port.GetResponse;
+            }
+            catch (Exception)
+            {
+            }
+            return (getResponse != "");
         }
 
         public string GetGunPressure ( byte GunNumb )
@@ -111,9 +128,8 @@ namespace EraDll
                 Request request = new Request();
                 request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.status);
                 port.SendCommand(Converter.HexToBytes(request.GetRequest));
-                Thread.Sleep(2000);
-                byte byteResp = port.GetByteResp(1);
-                if(byteResp== 132 || byteResp == 133 )
+                Thread.Sleep(SetTimeout);
+                if (port.GetResponse != "")
                 {
                     return port.GetResponse;
                 }
@@ -130,41 +146,52 @@ namespace EraDll
             }
             return false;
         }
-        
-        public int GetCacheLit (byte GunNumb)
-        {
-            return port.GetCacheLit(GunNumb);
-        }
 
-        async private void SetCacheGunStatus ( byte GunNumb )
-        {        
-            await Task.Run(()=>GetGunStatus(GunNumb));
-            Errors GunStatus = port.GetStatusByte;
-            if (GunStatus.ErrorCode == "80" || GunStatus.ErrorCode == "81" || GunStatus.ErrorCode == "82")
+
+        public double GetCacheLit ( byte GunNumb )
+        {
+            try
             {
-                double lit = await Task.Run(() => LastLiters(GunNumb));
-                port.SetCacheLit(GunNumb, lit);
-                await Task.Run(()=> SetCacheGunStatus(GunNumb));  
+                return port.GetCacheLit(GunNumb);
             }
-          
-        }
-        public bool IsPour ( byte GunNumb )
-        {
-            GetGunStatus(GunNumb);
-            Errors GunStatus = port.GetStatusByte;
-            if (GunStatus.ErrorCode == "84")
+            catch (Exception e)
             {
-                return true;
+                Console.WriteLine(e.Message);
+                return double.NaN;
             }
-            return false;
         }
-
-        public bool CheckConnection ()
+        public byte GetCacheStatus ( byte GunNumb )
         {
-            return port.CheckConnection;
+            try
+            {
+                return port.GetCacheStatus(GunNumb);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return 0;
+            }
         }
 
-        public double LastLiters ( byte GunNumb )
+        //TechFunc
+        private bool GunStat ( byte GunNumb )
+        {
+            if (port.IsStart)
+            {
+                Request request = new Request();
+                request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.status);
+                port.SendCommand(Converter.HexToBytes(request.GetRequest));
+                Thread.Sleep(2000);
+                byte byteResp = port.GetByteResp(4);
+                if (byteResp == 132 || byteResp == 133)
+                {
+                    return false;
+                }
+
+            }
+            return true;
+        }
+        private double LastLiters ( byte GunNumb )
         {
             if (port.IsStart)
             {
@@ -178,8 +205,30 @@ namespace EraDll
                 }
             }
             return -1.0;
-
         }
+
+        async private void SetCurrLitAndStat ( byte GunNumb )
+        {
+            Task<bool> isFinish = Task.Factory.StartNew(() => GunStat(GunNumb));
+            await isFinish;
+            if (isFinish.Result)
+            {
+                Console.WriteLine("---------Finish---------");
+                Console.WriteLine(port.GetCacheLit(GunNumb));
+                Console.WriteLine("---------Finish---------");
+                port.SetCacheStatus(GunNumb, 128);
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Запись Литров");
+                double liters = await Task.Run(() => LastLiters(GunNumb));
+                port.SetCacheLit(GunNumb, liters);
+                SetCurrLitAndStat(GunNumb);
+            }
+        }
+
+        //
         public double LastAmount ( byte GunNumb )
         {
             if (port.IsStart)
@@ -194,6 +243,21 @@ namespace EraDll
                 }
             }
             return -1;
+        }
+        public bool IsPour ( byte GunNumb )
+        {
+            //GetGunStatus(GunNumb);
+            byte CacheSt = port.GetCacheStatus(GunNumb);
+            if (Array.IndexOf(Errors.GetPourStatuses(), CacheSt) != -1)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public bool CheckConnection ()
+        {
+            return port.CheckConnection;
         }
 
         public string LastResponse ()
@@ -258,11 +322,15 @@ namespace EraDll
             try
             {
                 getResponse = port.GetResponse;
+                port.SetCacheLit(GunNumb, 0);
+                port.SetCacheStatus(GunNumb, 132);
+                SetCurrLitAndStat(GunNumb);
             }
             catch (Exception)
             {
+
             }
-            return (getResponse != "");
+            return getResponse != "";
         }
 
         public bool PourGasolinePrice ( byte GunNumb, int price, int PriceForLit )
