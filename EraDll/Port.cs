@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO.Ports;
 
 namespace EraDll
@@ -7,47 +6,16 @@ namespace EraDll
     class Port
     {
         private SerialPort _sp = new SerialPort();
-        private readonly Dictionary<byte, Response>  responses = new Dictionary<byte, Response>();
-        private bool isBusy = false;
-
+        private readonly Response response = new Response();
 
         public bool CheckConnection => _sp.IsOpen;
         public byte IndexByte { get; private set; } = 0;
         public string GetResponse => response.ParseResponse();
-
-        public double GetCacheLit ( byte GunNumb ) => response.CacheGunLit[GunNumb];
-        public byte GetCacheStatus ( byte GunNumb )
-        {
-            try
-            {
-                return response.CacheGunStatus[GunNumb];
-            }
-            catch (Exception)
-            {
-            }
-            return 0;
-
-        }
+        public int GetCacheLit ( byte GunNumb ) => response.CacheLit[GunNumb];
+        public int SetCacheLit ( byte GunNumb ) = response.
         public bool GetParseStatus { get; private set; }
+
         public byte GetByteResp ( int index ) => response.GetResponse[index];
-
-        public void SetCacheLit ( byte GunNumb, double liters )
-        {
-            if (response.CacheGunLit.ContainsKey(GunNumb))
-            {
-                response.CacheGunLit.Remove(GunNumb);
-            }
-            response.CacheGunLit.Add(GunNumb, liters);
-        }
-        public void SetCacheStatus ( byte GunNumb, byte code )
-        {
-            if (response.CacheGunStatus.ContainsKey(GunNumb))
-            {
-                response.CacheGunStatus.Remove(GunNumb);
-            }
-            response.CacheGunStatus.Add(GunNumb, code);
-        }
-
         public Errors GetStatusByte => response.CurrError;
 
         public bool IsStart { get; private set; }
@@ -101,7 +69,6 @@ namespace EraDll
         {
             if (IsStart && _sp.IsOpen)
             {
-                isBusy = true;
                 SerialPort port = (SerialPort)sender;
                 int bytesToRead = port.BytesToRead;
                 GetParseStatus = true;
@@ -113,7 +80,6 @@ namespace EraDll
                         if (GetParseStatus)
                         {
                             GetParseStatus = false;
-                            isBusy = false;
                         }
                         break;
                     }
@@ -125,7 +91,7 @@ namespace EraDll
 
         public void SendCommand ( byte[] command )
         {
-            if (IsStart && !isBusy)
+            if (IsStart)
             {
                 this.response.ClearResponse();
                 this._sp.Write(command, 0, command.Length);
