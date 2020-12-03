@@ -45,7 +45,7 @@ namespace EraDll
 
         double TotalLiters ( byte GunNumb );
 
-        string LastResponse ();
+        string LastResponse ( byte GunNumb );
 
         bool Start ( byte GunNumb );
         bool Pause ( byte GunNumb );
@@ -92,12 +92,12 @@ namespace EraDll
         {
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.changeShift);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
             string getResponse = "";
             try
             {
-                getResponse = port.GetResponse;
+                getResponse = port.GetResponse(GunNumb);
             }
             catch (Exception)
             {
@@ -111,11 +111,11 @@ namespace EraDll
             {
                 Request request = new Request();
                 request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.pressure);
-                port.SendCommand(Converter.HexToBytes(request.GetRequest));
+                port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
                 Thread.Sleep(SetTimeout);
-                if (port.GetResponse != "")
+                if (port.GetResponse(GunNumb) != "")
                 {
-                    return port.GetResponse;
+                    return port.GetResponse(GunNumb);
                 }
             }
             return "";
@@ -127,11 +127,11 @@ namespace EraDll
             {
                 Request request = new Request();
                 request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.status);
-                port.SendCommand(Converter.HexToBytes(request.GetRequest));
+                port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
                 Thread.Sleep(SetTimeout);
-                if (port.GetResponse != "")
+                if (port.GetResponse(GunNumb) != "")
                 {
-                    return port.GetResponse;
+                    return port.GetResponse(GunNumb);
                 }
             }
             return "";
@@ -139,7 +139,7 @@ namespace EraDll
         public bool ReadyToWork ( byte GunNumb )
         {
             GetGunStatus(GunNumb);
-            Errors GunStatus = port.GetStatusByte;
+            Errors GunStatus = port.GetStatusByte(GunNumb);
             if (GunStatus.ErrorCode == "80" || GunStatus.ErrorCode == "81" || GunStatus.ErrorCode == "82")
             {
                 return true;
@@ -173,16 +173,16 @@ namespace EraDll
             }
         }
 
-        //TechFunc
+        //TechFunc   ---------------------------------------------------------------------------------------------------------------------------
         private bool GunStat ( byte GunNumb )
         {
             if (port.IsStart)
             {
                 Request request = new Request();
                 request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.status);
-                port.SendCommand(Converter.HexToBytes(request.GetRequest));
-                Thread.Sleep(2000);
-                byte byteResp = port.GetByteResp(4);
+                port.SendAsyncCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
+                Thread.Sleep(5000);
+                byte byteResp = port.GetByteResp(GunNumb, 4);
                 if (byteResp == 132 || byteResp == 133)
                 {
                     return false;
@@ -197,11 +197,11 @@ namespace EraDll
             {
                 Request request = new Request();
                 request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.curLit, Commands.curLit);
-                port.SendCommand(Converter.HexToBytes(request.GetRequest));
+                port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
                 Thread.Sleep(SetTimeout);
-                if (port.GetResponse != "")
+                if (port.GetResponse(GunNumb) != "")
                 {
-                    return port.GetLiters(9, 3);
+                    return port.GetLiters(GunNumb, 9, 3);
                 }
             }
             return -1.0;
@@ -235,11 +235,11 @@ namespace EraDll
             {
                 Request request = new Request();
                 request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.curLit, Commands.curLit);
-                port.SendCommand(Converter.HexToBytes(request.GetRequest));
+                port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
                 Thread.Sleep(SetTimeout);
-                if (port.GetResponse != "")
+                if (port.GetResponse(GunNumb) != "")
                 {
-                    return port.GetLiters(9, 4);
+                    return port.GetLiters(GunNumb, 9, 4);
                 }
             }
             return -1;
@@ -260,30 +260,30 @@ namespace EraDll
             return port.CheckConnection;
         }
 
-        public string LastResponse ()
+        public string LastResponse ( byte GunNumb )
         {
-            return port.GetResponse;
+            return port.GetResponse(GunNumb);
         }
 
         public double LitersShift ( byte GunNumb )
         {
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.litersShift);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
-            return ((port.GetResponse == "") ? -1.0 : port.GetLiters(5, 3));
+            return ((port.GetResponse(GunNumb) == "") ? -1.0 : port.GetLiters(GunNumb, 5, 3));
         }
 
         public bool NcashShift ( byte GunNumb )
         {
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.NcashShift);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
             string getResponse = "";
             try
             {
-                getResponse = port.GetResponse;
+                getResponse = port.GetResponse(GunNumb);
             }
             catch (Exception)
             {
@@ -295,12 +295,12 @@ namespace EraDll
         {
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.pause);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
             string getResponse = "";
             try
             {
-                getResponse = port.GetResponse;
+                getResponse = port.GetResponse(GunNumb);
             }
             catch (Exception)
             {
@@ -316,12 +316,12 @@ namespace EraDll
             }
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, PriceForLit, liters, ByteCounts.pourLit, Commands.pourLit);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
             string getResponse = "";
             try
             {
-                getResponse = port.GetResponse;
+                getResponse = port.GetResponse(GunNumb);
                 port.SetCacheLit(GunNumb, 0);
                 port.SetCacheStatus(GunNumb, 132);
                 SetCurrLitAndStat(GunNumb);
@@ -341,12 +341,12 @@ namespace EraDll
             }
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, PriceForLit, price, ByteCounts.pourLit, Commands.pourPr);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
             string getResponse = "";
             try
             {
-                getResponse = port.GetResponse;
+                getResponse = port.GetResponse(GunNumb);
             }
             catch (Exception)
             {
@@ -358,12 +358,12 @@ namespace EraDll
         {
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, PriceForLit, liters, ByteCounts.pourLit, Commands.NcashLit);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
             string getResponse = "";
             try
             {
-                getResponse = port.GetResponse;
+                getResponse = port.GetResponse(GunNumb);
             }
             catch (Exception)
             {
@@ -375,12 +375,12 @@ namespace EraDll
         {
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.priceShift);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
             string getResponse = "";
             try
             {
-                getResponse = port.GetResponse;
+                getResponse = port.GetResponse(GunNumb);
             }
             catch (Exception)
             {
@@ -393,7 +393,7 @@ namespace EraDll
             string getResponse = "";
             try
             {
-                getResponse = port.GetResponse;
+                getResponse = port.GetResponse(GunNumb);
             }
             catch (Exception)
             {
@@ -405,12 +405,12 @@ namespace EraDll
         {
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.stop);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
             string getResponse = "";
             try
             {
-                getResponse = port.GetResponse;
+                getResponse = port.GetResponse(GunNumb);
             }
             catch (Exception)
             {
@@ -422,9 +422,9 @@ namespace EraDll
         {
             Request request = new Request();
             request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.totLit);
-            port.SendCommand(Converter.HexToBytes(request.GetRequest));
+            port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
             Thread.Sleep(SetTimeout);
-            return ((port.GetResponse == "") ? -1.0 : port.GetLiters(5, 4));
+            return (port.GetResponse(GunNumb) == "") ? -1.0 : port.GetLiters(GunNumb, 5, 4);
         }
     }
 }

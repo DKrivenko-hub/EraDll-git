@@ -2,7 +2,11 @@
 
 namespace EraDll
 {
-    public static readonly List<Errors> ErrorList = new List<Errors>()
+
+
+    class Response
+    {
+        public readonly List<Errors> ErrorList = new List<Errors>()
             {
                 new Errors("80", "Полностью остановленная ТРК и неактивная клавиатура", "SSR", "Stop Status Response", 9, false) ,
                 new Errors("81", "Полностью остановленная ТРК, неактивная клавиатура и расширенный режим ответа ", "SSE", "Stop Status Extend ", 11, false) ,
@@ -34,13 +38,11 @@ namespace EraDll
                 new Errors("", "Действие невыполнимо", "ACR", "Action Cancelled Response", 9, true),
                 new Errors("", "Неопознанный ответ", "U", "Unknown", 9, true)
             };
-
-    class Response
-    {
-
         private string parseResponse = "";
+        private string parseAsyncResponse = "";
 
         public List<byte> GetResponse { get; set; } = new List<byte>();
+        public List<byte> GetAsyncResponse { get; set; } = new List<byte>();
 
         public double CacheGunLit { get; set; }
         public byte CacheGunStatus { get; set; }
@@ -48,11 +50,28 @@ namespace EraDll
 
         public Errors CurrError { get; private set; } = null;
 
+        public Response ( byte[] response, bool isAsync = false )
+        {
+            if (isAsync)
+            {
+                GetAsyncResponse.AddRange(response);
+            }
+            else
+            {
+                GetResponse.AddRange(response);
+            }
+
+        }
 
         public void ClearResponse ()
         {
             parseResponse = "";
             GetResponse.Clear();
+        }
+        public void ClearAsyncResponse ()
+        {
+            parseAsyncResponse = "";
+            GetAsyncResponse.Clear();
         }
 
         public double ParseLiters ( int startByte, int count )
@@ -93,18 +112,30 @@ namespace EraDll
             }
             return Converter.HexToInt(hex);
         }
-        public string ParseResponse ()
+        public string ParseResponse ( bool isAsync = false )
         {
-            if (this.GetResponse.Count > 0)
+            CurrError = this.ErrorList.Find(er => er.ErrorCode.Contains(Converter.ByteToHex(this.GetResponse[4]))) ?? this.ErrorList[20];
+            if (isAsync)
             {
-                CurrError = this.ErrorList.Find(er => er.ErrorCode.Contains(Converter.ByteToHex(this.GetResponse[4]))) ?? this.ErrorList[20];
-
-                this.parseResponse = "Номер пистолета: " + this.GetResponse[1].ToString();
-                string[] textArray1 = new string[] { this.parseResponse, " Ответ: ", CurrError.ErrorDescription, "; Сообщение: ", CurrError.ErrorMessage };
-                this.parseResponse = string.Concat(textArray1);
-                this.parseResponse = this.parseResponse + " Полный код ответа: " + Converter.BytesToHex(this.GetResponse.ToArray());
+                if (this.GetAsyncResponse.Count > 0)
+                {
+                    this.parseResponse = "Номер пистолета: " + this.GetAsyncResponse[1].ToString();
+                    parseResponse += " Ответ: " + CurrError.ErrorDescription + "; Сообщение: " + CurrError.ErrorMessage +
+                        " Полный код ответа: " + Converter.BytesToHex(this.GetAsyncResponse.ToArray());
+                }
+                return this.parseAsyncResponse;
             }
-            return this.parseResponse;
+            else
+            {
+                if (this.GetResponse.Count > 0)
+                {
+                    this.parseResponse = "Номер пистолета: " + this.GetResponse[1].ToString();
+                    parseResponse += " Ответ: " + CurrError.ErrorDescription + "; Сообщение: " + CurrError.ErrorMessage +
+                        " Полный код ответа: " + Converter.BytesToHex(this.GetResponse.ToArray());
+                }
+                return this.parseResponse;
+            }
+
         }
 
         public string RespToString ()
