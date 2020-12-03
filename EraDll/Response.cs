@@ -44,8 +44,14 @@ namespace EraDll
         public List<byte> GetResponse { get; set; } = new List<byte>();
         public List<byte> GetAsyncResponse { get; set; } = new List<byte>();
 
+      //  public Dictionary<string, Response> response = new Dictionary<string, Response>();
+
         public double CacheGunLit { get; set; }
         public byte CacheGunStatus { get; set; }
+
+        public bool isBusy = false;
+        public bool isStoped = false;
+        public byte ResponseCode;
 
 
         public Errors CurrError { get; private set; } = null;
@@ -62,6 +68,7 @@ namespace EraDll
             }
 
         }
+        public Response () { }
 
         public void ClearResponse ()
         {
@@ -114,7 +121,12 @@ namespace EraDll
         }
         public string ParseResponse ( bool isAsync = false )
         {
-            CurrError = this.ErrorList.Find(er => er.ErrorCode.Contains(Converter.ByteToHex(this.GetResponse[4]))) ?? this.ErrorList[20];
+            if(GetResponse.Count>4)
+            {
+                 CurrError =  ErrorList.Find(er => er.ErrorCode.Contains(Converter.ByteToHex(GetResponse[4]))) ?? ErrorList[20];
+            }
+
+            
             if (isAsync)
             {
                 if (this.GetAsyncResponse.Count > 0)
@@ -127,7 +139,7 @@ namespace EraDll
             }
             else
             {
-                if (this.GetResponse.Count > 0)
+                if (GetResponse.Count > 0)
                 {
                     this.parseResponse = "Номер пистолета: " + this.GetResponse[1].ToString();
                     parseResponse += " Ответ: " + CurrError.ErrorDescription + "; Сообщение: " + CurrError.ErrorMessage +
