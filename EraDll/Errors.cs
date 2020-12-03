@@ -39,9 +39,5 @@
 
         public bool IsError { get; private set; }
 
-        public static byte[] GetPourStatuses ()
-        {
-            return pourStat;
-        }
     }
 }

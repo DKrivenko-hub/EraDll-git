@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,14 +34,14 @@ namespace EraDll
         bool PourGasolinePrice ( byte GunNumb, int price, int PriceForLit );
         bool PourNcachLit ( byte GunNumb, int liters, int PriceForLit );
 
-        //double LastLiters ( byte GunNumb );
+        //double LastLiters ( byte GunNumb );                      
         double LastAmount ( byte GunNumb );
 
         double GetCacheLit ( byte GunNumb );
         byte GetCacheStatus ( byte GunNumb );
 
         bool ChangeShift ( byte GunNumb );
-        double LitersShift ( byte GunNumb );
+        double LitersShift ( byte GunNumb );                                                                                                               
         bool PriceShift ( byte GunNumb );
         bool NcashShift ( byte GunNumb );
 
@@ -69,7 +71,8 @@ namespace EraDll
 
         public bool Connect ()
         {
-            port.Connect(PortName, 9600);
+            int[] GunsList = new int[] { 10, 15 };
+            port.Connect(PortName, 9600, Array.ConvertAll(GunsList, el=>Convert.ToByte(el)));
             return port.IsStart;
         }
 
@@ -139,8 +142,8 @@ namespace EraDll
         public bool ReadyToWork ( byte GunNumb )
         {
             GetGunStatus(GunNumb);
-            Errors GunStatus = port.GetStatusByte(GunNumb);
-            if (GunStatus.ErrorCode == "80" || GunStatus.ErrorCode == "81" || GunStatus.ErrorCode == "82")
+            byte errorByte = port.GetByteResp(GunNumb, 4);
+            if (errorByte == 128 || errorByte == 129 || errorByte == 130)
             {
                 return true;
             }
@@ -178,12 +181,17 @@ namespace EraDll
         {
             if (port.IsStart)
             {
+                Console.WriteLine("---------Получаем Статус пистолета {0}---------", GunNumb);
                 Request request = new Request();
                 request.CreateRequest(GunNumb, port.IndexByte, ByteCounts.status, Commands.status);
-                port.SendAsyncCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
-                Thread.Sleep(5000);
-                byte byteResp = port.GetByteResp(GunNumb, 4);
-                if (byteResp == 132 || byteResp == 133)
+                port.SendCommand(GunNumb, Converter.HexToBytes(request.GetRequest));
+                Thread.Sleep(1000);
+
+                //byte byteResp = port.GetByteResp(GunNumb, 4);
+               Errors currErr = port.GetStatusByte(GunNumb);
+                //Console.WriteLine(byteResp);
+                Console.WriteLine("---------Возращаем Статус пистолета {0}---------", GunNumb);
+                if (currErr.ErrorCode == "84"  || currErr.ErrorCode == "85" )
                 {
                     return false;
                 }
@@ -207,24 +215,45 @@ namespace EraDll
             return -1.0;
         }
 
-        async private void SetCurrLitAndStat ( byte GunNumb )
+        async private void SetCurrLitAndStat ()
         {
-            Task<bool> isFinish = Task.Factory.StartNew(() => GunStat(GunNumb));
-            await isFinish;
-            if (isFinish.Result)
+            bool isAnyoneBusy = false;
+           // Dictionary<byte, Response> resp = port.responses;
+            foreach (byte gunNumb in port.responses.Keys)
             {
-                Console.WriteLine("---------Finish---------");
-                Console.WriteLine(port.GetCacheLit(GunNumb));
-                Console.WriteLine("---------Finish---------");
-                port.SetCacheStatus(GunNumb, 128);
-                return;
+                Response currGun = port.responses[gunNumb];
+                if (currGun.isStoped)
+                {
+                    //вызов стоп
+                    continue;
+                }
+                else if (!currGun.isBusy)
+                {
+                    continue;
+                }
+
+                Task<bool> isFinish = Task.Factory.StartNew(() => GunStat(gunNumb));
+                await isFinish;
+                if (isFinish.Result)
+                {
+                    Console.WriteLine("---------Finish---------");
+                    Console.WriteLine(port.GetCacheLit(gunNumb));
+                    Console.WriteLine("---------Finish---------");
+                    port.SetCacheStatus(gunNumb, 128);
+                    currGun.isBusy = false;
+                    continue;
+                }
+                else
+                {
+                    Console.WriteLine("Запись Литров");
+                    double liters = await Task.Run(() => LastLiters(gunNumb));
+                    port.SetCacheLit(gunNumb, liters);
+                    isAnyoneBusy = true;
+                }
             }
-            else
+            if (isAnyoneBusy)
             {
-                Console.WriteLine("Запись Литров");
-                double liters = await Task.Run(() => LastLiters(GunNumb));
-                port.SetCacheLit(GunNumb, liters);
-                SetCurrLitAndStat(GunNumb);
+                SetCurrLitAndStat();
             }
         }
 
@@ -248,7 +277,9 @@ namespace EraDll
         {
             //GetGunStatus(GunNumb);
             byte CacheSt = port.GetCacheStatus(GunNumb);
-            if (Array.IndexOf(Errors.GetPourStatuses(), CacheSt) != -1)
+            Console.WriteLine(CacheSt);
+
+            if (CacheSt == 132  || CacheSt == 133)
             {
                 return true;
             }
@@ -324,11 +355,33 @@ namespace EraDll
                 getResponse = port.GetResponse(GunNumb);
                 port.SetCacheLit(GunNumb, 0);
                 port.SetCacheStatus(GunNumb, 132);
-                SetCurrLitAndStat(GunNumb);
+               
+                bool isAnyoneBusy = false;
+                foreach (byte gunNumb in port.responses.Keys)
+                {
+                    Response currGun = port.responses[gunNumb];  
+                   
+                    if (currGun.isBusy)
+                    {
+                        isAnyoneBusy = true;
+                        continue;
+                    }
+                    else if(gunNumb == GunNumb)
+                    {
+                        currGun.isBusy = true;
+                    }
+                   
+                }
+                if (!isAnyoneBusy)
+                {
+                    //запуск цикла  
+                    SetCurrLitAndStat();
+                }
+                
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                Console.WriteLine(ex.Message);
             }
             return getResponse != "";
         }
