@@ -27,13 +27,13 @@ namespace EraDll
         {
             return BitConverter.ToString(BitConverter.GetBytes(price), 0, 2).Replace('-', ' ');
         }
-        public static int HexToInt (string hex )
+        public static int HexToInt ( string hex )
         {
-            return Convert.ToInt32(hex,16);
+            return Convert.ToInt32(hex, 16);
         }
-        public static byte HexToByte( string hex )
+        public static byte HexToByte ( string hex )
         {
-            return Convert.ToByte(hex,16);
+            return Convert.ToByte(hex, 16);
         }
     }
 }

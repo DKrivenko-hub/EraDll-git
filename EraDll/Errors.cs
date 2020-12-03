@@ -2,7 +2,7 @@
 {
     internal class Errors
     {
-        private static readonly byte[] pourStat = 
+        private static readonly byte[] pourStat =
         {
             132,
            133,
@@ -38,7 +38,7 @@
         public int RespBytes { get; private set; }
 
         public bool IsError { get; private set; }
-        
+
         public static byte[] GetPourStatuses ()
         {
             return pourStat;
