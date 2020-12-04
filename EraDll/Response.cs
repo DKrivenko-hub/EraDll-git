@@ -6,47 +6,23 @@ namespace EraDll
 
     class Response
     {
-        private string parseResponse = "";
-        private string parseAsyncResponse = "";
+#pragma warning disable IDE1006 // Стили именования
+        public List<byte> response { get; set; } = new List<byte>();
+#pragma warning restore IDE1006 // Стили именования
 
-        public List<byte> GetResponse { get; set; } = new List<byte>();
-        public List<byte> GetAsyncResponse { get; set; } = new List<byte>();
-
-      //  public Dictionary<string, Response> response = new Dictionary<string, Response>();
-
-        public double CacheGunLit { get; set; }
-        public byte CacheGunStatus { get; set; }
-
-        public bool isBusy = false;
-        public bool isStoped = false;
-        public byte ResponseCode;
-
+#pragma warning disable IDE1006 // Стили именования
+        public string parseResponse { get; private set; } = "";
+#pragma warning restore IDE1006 // Стили именования
 
         public Error CurrError { get; private set; } = null;
 
-        //public Response ( byte[] response, bool isAsync = false )
-        //{
-        //    if (isAsync)
-        //    {
-        //        GetAsyncResponse.AddRange(response);
-        //    }
-        //    else
-        //    {
-        //        GetResponse.AddRange(response);
-        //    }
-
-        //}
-        //public Response () { }
+        public byte ResponseCode;
+        public byte GunNumb;
 
         public void ClearResponse ()
         {
             parseResponse = "";
-            GetResponse.Clear();
-        }
-        public void ClearAsyncResponse ()
-        {
-            parseAsyncResponse = "";
-            GetAsyncResponse.Clear();
+            response.Clear();
         }
 
         public double ParseLiters ( int startByte, int count )
@@ -60,12 +36,12 @@ namespace EraDll
             int i = 0;
             do
             {
-                if (GetResponse[startByte + count - i - 1] == 0 & i + 1 < count)
+                if (response[startByte + count - i - 1] == 0 & i + 1 < count)
                 {
                     i++;
                     continue;
                 }
-                litBytes += Converter.ByteToHex(GetResponse[startByte + count - i - 1]);
+                litBytes += Converter.ByteToHex(response[startByte + count - i - 1]);
                 i++;
             } while (i < count);
 
@@ -83,46 +59,46 @@ namespace EraDll
             string hex = "";
             for (int i = 0; i < 2; i++)
             {
-                hex += Converter.ByteToHex(GetResponse[14 - i]);
+                hex += Converter.ByteToHex(response[14 - i]);
             }
             return Converter.HexToInt(hex);
         }
         public string ParseResponse ( bool isAsync = false )
         {
-            if(GetResponse.Count>4)
+            CurrError = ErrorList.GetErrorByCode(Converter.ByteToHex(response[4]));
+            if (parseResponse != "")
             {
-                 CurrError =  ErrorList.GetErrorByCode(Converter.ByteToHex(GetResponse[4]));
+                return parseResponse;
             }
 
-            
+
             if (isAsync)
             {
-                if (this.GetAsyncResponse.Count > 0)
-                {
-                    this.parseResponse = "Номер пистолета: " + this.GetAsyncResponse[1].ToString();
-                    parseResponse += " Ответ: " + CurrError.ErrorDescription + "; Сообщение: " + CurrError.ErrorMessage +
-                        " Полный код ответа: " + Converter.BytesToHex(this.GetAsyncResponse.ToArray());
-                }
-                return this.parseAsyncResponse;
+                //if (this.GetAsyncResponse.Count > 0)
+                //{
+                //    this.parseResponse = "Номер пистолета: " + this.GetAsyncResponse[1].ToString();
+                //    parseResponse += " Ответ: " + CurrError.ErrorDescription + "; Сообщение: " + CurrError.ErrorMessage +
+                //        " Полный код ответа: " + Converter.BytesToHex(this.GetAsyncResponse.ToArray());
+                //}
+                //return this.parseAsyncResponse;
             }
             else
             {
-                if (GetResponse.Count > 0)
+                if (response.Count > 0)
                 {
-                    this.parseResponse = "Номер пистолета: " + this.GetResponse[1].ToString();
+                    parseResponse = "Номер пистолета: " + response[1].ToString();
                     parseResponse += " Ответ: " + CurrError.ErrorDescription + "; Сообщение: " + CurrError.ErrorMessage +
-                        " Полный код ответа: " + Converter.BytesToHex(this.GetResponse.ToArray());
+                        " Полный код ответа: " + Converter.BytesToHex(response.ToArray());
                 }
-                return this.parseResponse;
+
             }
+            return parseResponse;
 
         }
 
         public string RespToString ()
         {
-            return Converter.BytesToHex(this.GetResponse.ToArray());
+            return Converter.BytesToHex(response.ToArray());
         }
-
-
     }
 }

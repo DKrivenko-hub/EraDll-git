@@ -39,6 +39,7 @@ namespace EraDll
                 new Error("", "Действие невыполнимо", "ACR", "Action Cancelled Response", 9, true),
                 new Error("", "Неопознанный ответ", "U", "Unknown", 9, true)
             };
+      
         public static Error GetErrorByCode (string hexCode)
         {
             return errorList.Find(error => error.ErrorCode == hexCode);
