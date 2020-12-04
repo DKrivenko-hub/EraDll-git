@@ -41,7 +41,7 @@ namespace EraDll
 
         double TotalLiters ( byte GunNumb );
 
-        string LastResponse ( byte GunNumb );
+       // string LastResponse ( byte GunNumb );
 
         //bool Start ( byte GunNumb );
         //bool Pause ( byte GunNumb );
@@ -247,6 +247,7 @@ namespace EraDll
                     Console.WriteLine("---------Finish---------");
                     port.SetCacheStatus(gunNumb, 128);
                     currGun.isBusy = false;
+                    currGun.isStop = false;
                     continue;
                 }
                 else
@@ -304,7 +305,7 @@ namespace EraDll
             return port.CheckConnection;
         }
 
-        public string LastResponse ( byte GunNumb )
+        private string LastResponse ( byte GunNumb )
         {
             return port.GetResponse(GunNumb);
         }
@@ -375,8 +376,8 @@ namespace EraDll
             indexByte++;
             Thread.Sleep(SetTimeout);
             string getResponse = "";
-            try
-            {
+            //try
+            //{
                 getResponse = port.GetResponse( localIndByte);
                 port.SetCacheLit(GunNumb, 0);
                 port.SetCacheStatus(GunNumb , 132);
@@ -402,12 +403,12 @@ namespace EraDll
                     SetCurrLitAndStat();
                 }
 
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                throw ex;
-            }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine(ex.Message);
+            //    throw ex;
+            //}
             return getResponse != "";
         }
 
@@ -523,7 +524,7 @@ namespace EraDll
             port.SendCommand(GunNumb,localIndByte, Converter.HexToBytes(request.GetRequest));
             indexByte++;
             Thread.Sleep(SetTimeout);
-            return (port.GetResponse(GunNumb) == "") ? -1.0 : port.GetLiters(GunNumb, 5, 4);
+            return (port.GetResponse(localIndByte) == "") ? -1.0 : port.GetLiters(localIndByte, 5, 4);
         }
     }
 }
