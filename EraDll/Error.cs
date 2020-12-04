@@ -1,13 +1,14 @@
 ﻿namespace EraDll
 {
-    internal class Errors
+
+    internal class Error
     {
         private static readonly byte[] pourStat =
         {
             132,
            133,
         };
-        public Errors ( string ErrorCode, string ErrorMessage, string ErrorShDescription, string ErrorDescription, bool IsError = false )
+        public Error ( string ErrorCode, string ErrorMessage, string ErrorShDescription, string ErrorDescription, bool IsError = false )
         {
             this.ErrorCode = ErrorCode;
             this.ErrorMessage = ErrorMessage;
@@ -17,7 +18,7 @@
             this.IsError = IsError;
         }
 
-        public Errors ( string ErrorCode, string ErrorMessage, string ErrorShDescription, string ErrorDescription, int RespBytes, bool IsError = false )
+        public Error ( string ErrorCode, string ErrorMessage, string ErrorShDescription, string ErrorDescription, int RespBytes, bool IsError = false )
         {
             this.ErrorCode = ErrorCode;
             this.ErrorMessage = ErrorMessage;

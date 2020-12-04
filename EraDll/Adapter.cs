@@ -188,7 +188,7 @@ namespace EraDll
                 Thread.Sleep(1000);
 
                 //byte byteResp = port.GetByteResp(GunNumb, 4);
-               Errors currErr = port.GetStatusByte(GunNumb);
+               Error currErr = port.GetStatusByte(GunNumb);
                 //Console.WriteLine(byteResp);
                 Console.WriteLine("---------Возращаем Статус пистолета {0}---------", GunNumb);
                 if (currErr.ErrorCode == "84"  || currErr.ErrorCode == "85" )

@@ -10,7 +10,7 @@ namespace EraDll
     
         private SerialPort _sp = new SerialPort();
         public readonly Dictionary<byte, Response> responses = new Dictionary<byte, Response>();
-        public Dictionary<byte, string> responseList { get; private set; } = new Dictionary<byte, string>();
+        public Dictionary<byte, Response> responseList { get; private set; } = new Dictionary<byte, Response>();
 
         // 
         private byte lastGunNumb;
@@ -20,15 +20,17 @@ namespace EraDll
 
         public bool CheckConnection => _sp.IsOpen;
         public byte IndexByte { get; private set; } = 0;
-        public string GetResponse ( byte GunNumb ) =>responses[GunNumb].ParseResponse();
+            
+        public string GetResponse ( byte GunNumb ) =>responses[GunNumb].ParseResponse();      
+
         public double GetCacheLit ( byte GunNumb ) => responses[GunNumb].CacheGunLit;
         public byte GetCacheStatus ( byte GunNumb ) => responses[GunNumb].CacheGunStatus;
+
         public void SetCacheLit ( byte GunNumb, double liters ) => responses[GunNumb].CacheGunLit = liters;
         public void SetCacheStatus ( byte GunNumb, byte status ) => responses[GunNumb].CacheGunStatus = status;
-        public void SetGunIsBusy( byte GunNumb, bool isBusy) => responses[GunNumb].isBusy = isBusy;
-        public void SetGunIsStop( byte GunNumb, bool isStop) => responses[GunNumb].isBusy = isStop;
+
         public byte GetByteResp ( byte GunNumb, int index ) => responses[GunNumb].GetResponse[index];
-        public Errors GetStatusByte ( byte GunNumb ) => responses[GunNumb].CurrError;
+        public Error GetStatusByte ( byte GunNumb ) => responses[GunNumb].CurrError;
 
         public bool GetParseStatus { get; private set; }
         public bool IsStart { get; private set; }
@@ -114,7 +116,7 @@ namespace EraDll
                 //    //конец сообщения
                 //}
 
-                responseList[--IndexByte] += string.Join(" ", response);
+                responseList[--IndexByte].GetResponse.AddRange(response);
 
                //responses[lastGunNumb].ParseResponse();
             }
@@ -170,7 +172,7 @@ namespace EraDll
                     this.responses[GunNumb].ClearResponse();
                 this._sp.Write(command, 0, command.Length);
                 byte indexByte = IndexByte;
-                responseList.Add( IndexByte , "");
+                responseList.Add( IndexByte , new Response());
                 IndexByte = (byte)(indexByte + 1);
             }
         }
@@ -192,6 +194,8 @@ namespace EraDll
         {
             return this.responses[GunNumb].ParseLiters(StartByte, count);
         }
+
+
 
 
     }

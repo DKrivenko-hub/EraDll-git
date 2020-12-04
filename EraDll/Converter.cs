@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace EraDll
 {
-    static class Converter
+    internal static class Converter
     {
         public static byte[] HexToBytes ( string hex )
         {
